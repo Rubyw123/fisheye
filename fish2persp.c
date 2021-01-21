@@ -35,7 +35,9 @@ int ntransform = 0;
 
 PARAMS params;
 
-void parserParams(int argc, char ** argv)
+char ** ptr;
+
+void parser(int argc, char ** argv)
 {
    int i,
 
@@ -132,6 +134,13 @@ void parserParams(int argc, char ** argv)
 		}
    }
 	strcpy(fname,argv[argc-1]);
+}
+
+void input(int argc, char * argv)
+{
+   ptr = &argv;
+   parser(argc, ptr);
+   
 }
 
 int main(int argc,char **argv)
