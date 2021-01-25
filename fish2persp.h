@@ -57,6 +57,8 @@ double GetRunTime(void);
 void Normalise(XYZ *);
 void Init(void);
 void MakeRemap(char *);
-void parser(int, char **)
-void input(int, char*)
-
+TRANSFORM* transform(TRANSFORM*,int);
+PARAMS open_fish_image(PARAMS,char,FILE*,int,int,int);
+void create_persp_image(BITMAP4*);
+BITMAP4* convert(PARAMS,BITMAP4*);
+void write_file(PARAMS,FILE*,char,char,BITMAP4*);

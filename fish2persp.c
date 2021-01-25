@@ -35,231 +35,58 @@ int ntransform = 0;
 
 PARAMS params;
 
-char ** ptr;
-
-void parser(int argc, char ** argv)
-{
-   int i,
-
-   Init();
-
-	// Command line, must have at least the image name
-   if(argc < 2) {
-      GiveUsage(argv[0]);
-		exit(-1);
-   }
-
-   strcpy(basename,argv[argc-1]);
-   for (k=0;k<(int)strlen(basename);k++)
-      if (basename[k] == '.')
-         basename[k] = '\0';
-
-      // Parse command line options 
-   for (i=1;i<argc-1;i++) {
-      if (strcmp(argv[i],"-w") == 0) {
-         i++;
-         if ((params.perspwidth = atoi(argv[i])) < 8) {
-				fprintf(stderr,"Bad output perspective image width, must be > 8\n");
-				exit(-1);
-			}
-			params.perspwidth /= 2; 
-			params.perspwidth *= 2; // Even
-      } else if (strcmp(argv[i],"-h") == 0) {
-         i++;
-         if ((params.perspheight = atoi(argv[i])) < 8) {
-            fprintf(stderr,"Bad output perspective image height, must be > 8\n");
-            exit(-1);
-         }
-         params.perspheight /= 2; 
-         params.perspheight *= 2; // Even
-      } else if (strcmp(argv[i],"-s") == 0) {
-         i++;
-         if ((params.fishfov = atof(argv[i])) > 360) {
-            fprintf(stderr,"Maximum fisheye FOV is 360 degrees\n");
-            params.fishfov = 360;
-         }
-      } else if (strcmp(argv[i],"-t") == 0) {
-         i++;
-			if ((params.perspfov  = atof(argv[i])) > 170) {
-				fprintf(stderr,"Maximum/dangerous field of view, reset to 170\n");
-				params.perspfov = 170;
-			}
-      } else if (strcmp(argv[i],"-x") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = XTILT;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-y") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = YROLL;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-z") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = ZPAN;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-a") == 0) {
-         i++;
-         if ((params.antialias = atoi(argv[i])) < 1)
-            params.antialias = 1;
-		} else if (strcmp(argv[i],"-f") == 0) {
-			params.remap = TRUE;
-      } else if (strcmp(argv[i],"-c") == 0) {
-         i++;
-         params.fishcenterx = atoi(argv[i]);
-         i++;
-         params.fishcentery = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-r") == 0) {
-         i++;
-         params.fishradius = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-ry") == 0) {
-         i++;
-         params.fishradiusy = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-p") == 0) {
-         i++;
-         params.a1 = atof(argv[i]);
-         i++;
-         params.a2 = atof(argv[i]);
-         i++;
-         params.a3 = atof(argv[i]);
-         i++;
-         params.a4 = atof(argv[i]);
-         params.rcorrection = TRUE;
-		} else if (strcmp(argv[i],"-d") == 0) {
-         params.debug = TRUE;
-		}
-   }
-	strcpy(fname,argv[argc-1]);
-}
-
-void input(int argc, char * argv)
-{
-   ptr = &argv;
-   parser(argc, ptr);
-   
-}
 
 int main(int argc,char **argv)
 {
-	int i,j,k,ai,aj;
-	int w,h,depth,u,v,index;
-	RGB rgbsum,zero = {0,0,0};
-	double starttime;
-	FILE *fptr;
-	char basename[256],fname[128];
-	double x,y,r,phi,theta;
-	XYZ p,q;
-
+   int w,h,depth;
+   char basename[256], fname[128];
+   PARAMS *tmp = NULL;
+   FILE *fptr;
 	Init();
+   // Test
+   params.perspwidth = 1000;
+   params.perspheight = 800
+   params.fishfov = 190
+   params.fishradius = 553
+   params.fishcenterx = 1000
+   params.fishcentery = 548
+
+   transform = new TRANSFORM[2];
+   transform[0].axis = XTILT;
+   transform[0].value = 40.0;
+
+   transform[1].axis = YROLL;
+   transform[1].value = 30.0;
+
+   basename = '5';
+   fname = '5.jpg';
+
+   transform = transform(transform,2);
+   tmp = open_fish_image(params,fname, fptr,w,h,depth);
+   perspimage = create_persp_image(perspimage);
+   perspimage = convert(params,perspimage);
+   write_file(params,fptr,fname,basename,perspimage);
 
 
-   /*
-	// Command line, must have at least the image name
-	if (argc < 2) {
-		GiveUsage(argv[0]);
-		exit(-1);
-	}
-   */
 
-   // Base output name on input name
-   strcpy(basename,argv[argc-1]);
-   for (k=0;k<(int)strlen(basename);k++)
-      if (basename[k] == '.')
-         basename[k] = '\0';
 
-   // Parse command line options 
-   for (i=1;i<argc-1;i++) {
-      if (strcmp(argv[i],"-w") == 0) {
-         i++;
-         if ((params.perspwidth = atoi(argv[i])) < 8) {
-				fprintf(stderr,"Bad output perspective image width, must be > 8\n");
-				exit(-1);
-			}
-			params.perspwidth /= 2; 
-			params.perspwidth *= 2; // Even
-      } else if (strcmp(argv[i],"-h") == 0) {
-         i++;
-         if ((params.perspheight = atoi(argv[i])) < 8) {
-            fprintf(stderr,"Bad output perspective image height, must be > 8\n");
-            exit(-1);
-         }
-         params.perspheight /= 2; 
-         params.perspheight *= 2; // Even
-      } else if (strcmp(argv[i],"-s") == 0) {
-         i++;
-         if ((params.fishfov = atof(argv[i])) > 360) {
-            fprintf(stderr,"Maximum fisheye FOV is 360 degrees\n");
-            params.fishfov = 360;
-         }
-      } else if (strcmp(argv[i],"-t") == 0) {
-         i++;
-			if ((params.perspfov  = atof(argv[i])) > 170) {
-				fprintf(stderr,"Maximum/dangerous field of view, reset to 170\n");
-				params.perspfov = 170;
-			}
-      } else if (strcmp(argv[i],"-x") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = XTILT;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-y") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = YROLL;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-z") == 0) {
-			i++;
-         transform = realloc(transform,(ntransform+1)*sizeof(TRANSFORM));
-         transform[ntransform].axis = ZPAN;
-         transform[ntransform].value = DTOR*atof(argv[i]);
-         ntransform++;
-      } else if (strcmp(argv[i],"-a") == 0) {
-         i++;
-         if ((params.antialias = atoi(argv[i])) < 1)
-            params.antialias = 1;
-		} else if (strcmp(argv[i],"-f") == 0) {
-			params.remap = TRUE;
-      } else if (strcmp(argv[i],"-c") == 0) {
-         i++;
-         params.fishcenterx = atoi(argv[i]);
-         i++;
-         params.fishcentery = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-r") == 0) {
-         i++;
-         params.fishradius = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-ry") == 0) {
-         i++;
-         params.fishradiusy = atoi(argv[i]);
-      } else if (strcmp(argv[i],"-p") == 0) {
-         i++;
-         params.a1 = atof(argv[i]);
-         i++;
-         params.a2 = atof(argv[i]);
-         i++;
-         params.a3 = atof(argv[i]);
-         i++;
-         params.a4 = atof(argv[i]);
-         params.rcorrection = TRUE;
-		} else if (strcmp(argv[i],"-d") == 0) {
-         params.debug = TRUE;
-		}
-   }
-	strcpy(fname,argv[argc-1]);
+	
+	exit(0);
+}
 
-	// Precompute transform sin and cosine
-   for (j=0;j<ntransform;j++) {
+TRANSFORM* transform(TRANSFORM* transform[], int ntransform)
+{
+    int j;
+    for (j=0;j<ntransform;j++) {
       transform[j].cvalue = cos(transform[j].value);
       transform[j].svalue = sin(transform[j].value);
    }
+   return transform;
+}
 
-	// Attempt to open the fisheye image 
-	if (IsJPEG(fname))
+PARAMS open_fish_image(PARAMS params, char fname[], FILE * fptr, int w, int h, int depth)
+{
+    if (IsJPEG(fname))
 		params.imageformat = JPG;
 #ifdef ADDPNG
    if (IsPNG(fname))
@@ -301,58 +128,30 @@ int main(int argc,char **argv)
    	}
 	}
 	fclose(fptr);
-	params.fishwidth = w;
+    params.fishwidth = w;
 	params.fishheight = h;
 
-   // Create the perspective image
-   if ((perspimage = Create_Bitmap(params.perspwidth,params.perspheight)) == NULL) {
+    return params;
+}
+
+BITMAP4* create_persp_image(BITMAP4* perspimage)
+{
+    if ((perspimage = Create_Bitmap(params.perspwidth,params.perspheight)) == NULL) {
       fprintf(stderr,"Failed to malloc perspective image\n");
       exit(-1);
    }
    Erase_Bitmap(perspimage,params.perspwidth,params.perspheight,params.missingcolour);
+   return perspimage;
+}
 
-	// Parameter checking and setting defaults
-   if (params.fishcenterx < 0)
-      params.fishcenterx = params.fishwidth / 2;
-	if (params.fishcentery < 0)
-		params.fishcentery = params.fishheight / 2;
-	else
-		params.fishcentery = params.fishheight - 1 - params.fishcentery; // Bitmaplib assume bottom left
-	if (params.fishradius < 0)
-		params.fishradius = params.fishwidth / 2;
-	if (params.fishradiusy < 0)
-		params.fishradiusy = params.fishradius; // Circular if not anamorphic
-	params.fishfov /= 2;
-	params.fishfov *= DTOR;
-	params.perspfov *= DTOR;
+BITMAP4* convert(PARAMS params,BITMAP4* perspimage)
+{
+    int i,j,ai,aj,u,v,index;
+    double x,y,r,phi,theta;
+    RGB rgbsum,zero = {0,0,0};
+    XYZ p,q;
 
-	// Debugging information
-   if (params.debug) {
-      fprintf(stderr,"Input image\n");
-      fprintf(stderr,"   Dimensions: %d x %d\n",params.fishwidth,params.fishheight);
-      fprintf(stderr,"   Center offset: %d,%d\n",params.fishcenterx,params.fishcentery);
-      fprintf(stderr,"   Radius: %d x %d\n",params.fishradius,params.fishradiusy);
-      fprintf(stderr,"   FOV: %g\n",2*params.fishfov*RTOD);
-		fprintf(stderr,"Output image\n");
-      fprintf(stderr,"   Dimensions: %d x %d\n",params.perspwidth,params.perspheight);
-		fprintf(stderr,"   Horizontal fov: %g\n",params.perspfov*RTOD);
-		fprintf(stderr,"   Antialiasing: %d\n",params.antialias);
-   	if (ntransform > 0) {
-      	fprintf(stderr,"Rotations\n");
-      	for (j=0;j<ntransform;j++) {
-      	   if (transform[j].axis == XTILT)
-      	      fprintf(stderr,"   x rotate (tilt): ");
-      	   else if (transform[j].axis == YROLL)
-      	      fprintf(stderr,"   y rotate (roll): ");
-      	   else if (transform[j].axis == ZPAN)
-      	      fprintf(stderr,"   z rotate (pan): ");
-      	   fprintf(stderr,"%g\n",transform[j].value*RTOD);
-			}
-      }
-	}
-
-	// Step through each pixel in the output perspective image 
-	starttime = GetRunTime();
+    //starttime = GetRunTime();
 	for (j=0;j<params.perspheight;j++) {
       for (i=0;i<params.perspwidth;i++) {
         	rgbsum = zero;
@@ -423,15 +222,13 @@ int main(int argc,char **argv)
 
 		}
 	}
-	if (params.debug)
-		fprintf(stderr,"Compute time: %g ms\n",(GetRunTime()-starttime)*1000);
+    return perspimage;
+}
 
-   // Optionally create ffmpeg remap filter PGM files
-   if (params.remap)
-      MakeRemap(basename);
 
-	// Write the file 
-	strcpy(fname,basename);
+void write_file(PARAMS params, FILE * fptr, char fname[], char basename[], BITMAP4* perspimage)
+{
+    strcpy(fname,basename);
 	if (params.imageformat == JPG) {
 		strcat(fname,"_persp.jpg");
 #ifdef ADDPNG
@@ -452,13 +249,6 @@ int main(int argc,char **argv)
    	Write_Bitmap(fptr,perspimage,params.perspwidth,params.perspheight,12);
 	}
 	fclose(fptr);
-
-	exit(0);
-}
-
-void parser()
-{
-
 }
 
 /*    
