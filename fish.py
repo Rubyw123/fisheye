@@ -72,6 +72,29 @@ def parser():
     parser.add_argument("-y", type = float, default = 0.0)
     parser.add_argument("-z", type = float, default = 0.0)
 
+if __name__ == '__main__':
+    args = parser()
+    PARAMS params = 
+
+
+
+
+# Prototypes
+lib = CDLL("./libfish.so")
+
+lib.CameraRay.argtypes = [c_double,c_double,POINTER(XYZ)]
+
+lib.VectorSum.argtypes = [c_double,XYZ,c_double,XYZ,c_double,XYZ,c_double,XYZ]
+lib.VextorSum.restype = XYZ
+
+lib.GiveUsage.argtypes = [c_char_p]
+
+lib.Normalise.argtypes = [POINTER(XYZ)]
+
+lib.MakeRemap.argtypes = [c_char_p]
+
+
+
 
 
 
