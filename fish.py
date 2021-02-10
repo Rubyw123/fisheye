@@ -1,5 +1,23 @@
+#!python3
+"""
+Python 3 wrapper for fisheye images converting to perspective images
+
+LIBJEPG installed required.
+
+@author: Yizheng Wang
+"""
+
 from ctypes import *
 import os
+import math
+
+#Global variables
+TGA = 0
+JPG = 3
+PNG = 4
+XTILT = 0
+YROLL = 1
+ZPAN = 2
 
 class BITMAP4(Structure):
     _fields_ = [("r",c_ubyte),
@@ -17,12 +35,12 @@ class RGB(Structure):
     _fields_ = [("r",c_int),
                 ("g",c_int),
                 ("b",c_int)]
-ARAMS
+
 class TRANSFORM(Structure):
     _fields_ = [("axis",c_int),
                 ("value",c_double),
                 ("cvalue",c_double),
-                ("salue",c_double),]
+                ("svalue",c_double),]
 
 class PARAMS(Structure):
     _fields_ = [("fishfov",c_double),
@@ -46,52 +64,99 @@ class PARAMS(Structure):
                 ("missingcolour",BITMAP4),
                 ("debug",c_int)]
 
-def parser():
-    parser = argparse.ArgumentParser(description = "Fisheye To Perspective Convert")
-    parser.add_argument("-s", type = float,  default = 180.0)
-    #parser.add_argument("-fishheight", type = int, default = )
-    #parser.add_argument("-fishwidth", type = int, default = )
-    parser.add_argument("-cx", type = int, default = 1000)
-    parser.add_argument("-cy", type = int, default = 548)
-    parser.add_argument("-r", type = int, default = 553)
-    parser.add_argument("-ry", type = int, default = )
-    parser.add_argument("-a", type = int, default = 2 )
-    parser.add_argument("-remap", action = 'store_false')
-    parser.add_argument("-w", type = int, default = 800)
-    parser.add_argument("-h", type = int, default = 600)
-    parser.add_argument("-t", type = int, default = 100 )
-    #parser.add_argument("-imageformat", type = int, default = )
-    #parser.add_argument("-rcorrection", action = 'store_false')
-    #parser.add_argument("-a1", type = float, default = 0.0)
-    #parser.add_argument("-a2", type = float, default = 0.0)
-    #parser.add_argument("-a3", type = float, default = 0.0)
-    #parser.add_argument("-a4", type = float, default = 0.0)
-    #parser.add_argument("-missingcolour", type = int, default = )
-    parser.add_argument("-d", action = 'store_false')
-    parser.add_argument("-x", type = float, default = 0.0)
-    parser.add_argument("-y", type = float, default = 0.0)
-    parser.add_argument("-z", type = float, default = 0.0)
+def create_params(pwidth,pheight,ffov,fradius,fcenterx,fcentery, fheight,fwidth):
+    global JPG
+    params = PARAMS()
+    params.perspwidth = pwidth
+    params.perspheight = pheight
+    params.fishfov = ffov
+    params.fishradius = fradius
+    params.fishradiusy = fradius
+    params.fishcenterx = fcenterx
+    params.fishcentery = fcentery
+    params.fishwidth = fwidth
+    params.fishheight = fheight
+    params.debug = 0
+    params.perspfov = 100
+    params.antialias = 2
+    params.a1 =1
+    params.a2 =0
+    params.a3 =0
+    params.a4 =0
+    params.missingcolour.r = 128
+    params.missingcolour.g = 128
+    params.missingcolour.b = 128
+    params.missingcolour.a = 0
+    params.imageformat = JPG
 
-if __name__ == '__main__':
-    args = parser()
-    PARAMS params = 
+    return params
+
+def create_transform(x,y,z,n):
+    return lib.create_transform(x,y,z,n)
+
+def transforming(transform,n):
+    return lib.transforming(transform,n)
+
+def open_fish_image(params,cptr,fishimage):
+    return lib.open_fish_image(params,cptr,fishimage)
 
 
+def create_persp_image(perspimg,params):
+    return lib.create_persp_image(perspimg,params)
 
+def params_check(params):
+    return lib.params_check(params)
 
-# Prototypes
+def convert(params,perspimage,fishimage,transform,n):
+    return lib.convert(params, perspimage, fishimage, transform,n)
+
+def write_file(params,fname,basename,perspimage):
+    return lib.write_file(params,fname,basename,perspimage)
+
+def debug_info(params,transform,n):
+    return lib.debug_info(params,transform,n)
+
+def free_memory(perspimage,fishimage,transform):
+    return lib.free_memory(perspimage,fishimage,transform)
+
 lib = CDLL("./libfish.so")
 
-lib.CameraRay.argtypes = [c_double,c_double,POINTER(XYZ)]
+lib.CameraRay.argtypes = [c_double,c_double,POINTER(XYZ),PARAMS]
+lib.CameraRay.restype = XYZ
 
 lib.VectorSum.argtypes = [c_double,XYZ,c_double,XYZ,c_double,XYZ,c_double,XYZ]
-lib.VextorSum.restype = XYZ
+lib.VectorSum.restype = XYZ
 
 lib.GiveUsage.argtypes = [c_char_p]
 
 lib.Normalise.argtypes = [POINTER(XYZ)]
 
 lib.MakeRemap.argtypes = [c_char_p]
+
+lib.transforming.argtypes = [POINTER(TRANSFORM),c_int]
+lib.transforming.restype = POINTER(TRANSFORM)
+
+lib.open_fish_image.argtypes = [PARAMS,c_char_p,POINTER(BITMAP4)]
+lib.open_fish_image.restype = POINTER(BITMAP4)
+
+lib.create_persp_image.argtypes = [POINTER(BITMAP4),PARAMS]
+lib.create_persp_image.restype = POINTER(BITMAP4)
+
+lib.convert.argtypes = [PARAMS,POINTER(BITMAP4),POINTER(BITMAP4),POINTER(TRANSFORM),c_int]
+lib.convert.restype = POINTER(BITMAP4)
+
+lib.write_file.argtypes = [PARAMS,c_char_p,c_char_p,POINTER(BITMAP4)]
+
+lib.debug_info.argtypes = [PARAMS, POINTER(TRANSFORM), c_int]
+
+lib.params_check.argtypes = [PARAMS]
+lib.params_check.restype = PARAMS
+
+lib.create_transform.argtypes = [c_int,c_int,c_int,c_int]
+lib.create_transform.restype = POINTER(TRANSFORM)
+
+lib.free_memory.argtypes = [POINTER(BITMAP4),POINTER(BITMAP4),POINTER(TRANSFORM)]
+
 
 
 
