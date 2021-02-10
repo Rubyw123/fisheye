@@ -23,69 +23,100 @@
              For example: ffmpeg -i sample.jpg -i x.pgm -i y.pgm -lavfi remap sample.png
 */
 
-// Input image 
-BITMAP4 *fishimage = NULL;
-
-// Output image
-BITMAP4 *perspimage = NULL;
-
-// Rotation transformations
-TRANSFORM *transform = NULL;
-int ntransform = 0;
-
-PARAMS params;
-
-
-int main(int argc,char **argv)
+TRANSFORM* create_transform(int x, int y, int z, int ntransform)
 {
-   int w,h,depth;
-   char basename[256], fname[128];
-   PARAMS *tmp = NULL;
-   FILE *fptr;
-	Init();
-   // Test
-   params.perspwidth = 1000;
-   params.perspheight = 800
-   params.fishfov = 190
-   params.fishradius = 553
-   params.fishcenterx = 1000
-   params.fishcentery = 548
-
-   transform = new TRANSFORM[2];
-   transform[0].axis = XTILT;
-   transform[0].value = 40.0;
-
-   transform[1].axis = YROLL;
-   transform[1].value = 30.0;
-
-   basename = '5';
-   fname = '5.jpg';
-
-   transform = transform(transform,2);
-   tmp = open_fish_image(params,fname, fptr,w,h,depth);
-   perspimage = create_persp_image(perspimage);
-   perspimage = convert(params,perspimage);
-   write_file(params,fptr,fname,basename,perspimage);
-
-
-
-
-	
-	exit(0);
+   int i;
+   TRANSFORM* transform = NULL;
+   transform = realloc(transform,ntransform*sizeof(TRANSFORM));
+   for(i = 0; i <ntransform; i++){
+      while(TRUE){
+         if(x != 0 && x < 999){
+            transform[i].axis = XTILT;
+            transform[i].value = DTOR*x;
+            x = 999;
+            break;
+         }
+         if(y != 0 && y < 999){
+            transform[i].axis = YROLL;
+            transform[i].value = DTOR*y;
+            y = 999;
+            break;
+         }
+         if(y != 0 && z < 999){
+            transform[i].axis = ZPAN;
+            transform[i].value = DTOR*z;
+            z = 999;
+            break;
+         }
+         break;
+      }
+   }
+   return transform;
 }
 
-TRANSFORM* transform(TRANSFORM* transform[], int ntransform)
+
+PARAMS params_check(PARAMS params)
 {
-    int j;
-    for (j=0;j<ntransform;j++) {
+   if (params.fishcenterx < 0)
+      params.fishcenterx = params.fishwidth / 2;
+	if (params.fishcentery < 0)
+		params.fishcentery = params.fishheight / 2;
+	else
+		params.fishcentery = params.fishheight - 1 - params.fishcentery; // Bitmaplib assume bottom left
+	if (params.fishradius < 0)
+		params.fishradius = params.fishwidth / 2;
+	if (params.fishradiusy < 0)
+		params.fishradiusy = params.fishradius; // Circular if not anamorphic
+   params.fishfov /= 2;
+	params.fishfov *= DTOR;
+	params.perspfov *= DTOR;
+
+   return params;
+}
+
+
+void debug_info(PARAMS params, TRANSFORM* transform, int ntransform)
+{
+   int j;
+   if (params.debug) {
+      fprintf(stderr,"Input image\n");
+      fprintf(stderr,"   Dimensions: %d x %d\n",params.fishwidth,params.fishheight);
+      fprintf(stderr,"   Center offset: %d,%d\n",params.fishcenterx,params.fishcentery);
+      fprintf(stderr,"   Radius: %d x %d\n",params.fishradius,params.fishradiusy);
+      fprintf(stderr,"   FOV: %g\n",2*params.fishfov*RTOD);
+		fprintf(stderr,"Output image\n");
+      fprintf(stderr,"   Dimensions: %d x %d\n",params.perspwidth,params.perspheight);
+		fprintf(stderr,"   Horizontal fov: %g\n",params.perspfov*RTOD);
+		fprintf(stderr,"   Antialiasing: %d\n",params.antialias);
+   	if (ntransform > 0) {
+      	fprintf(stderr,"Rotations\n");
+      	for (j=0;j<ntransform;j++) {
+      	   if (transform[j].axis == XTILT)
+      	      fprintf(stderr,"   x rotate cos(tilt): ");
+      	   else if (transform[j].axis == YROLL)
+      	      fprintf(stderr,"   y rotate c0s(roll): ");
+      	   else if (transform[j].axis == ZPAN)
+      	      fprintf(stderr,"   z rotate (pan): ");
+      	   fprintf(stderr,"%g\n",transform[j].cvalue*RTOD);
+			}
+      }
+	}
+}
+
+TRANSFORM* transforming(TRANSFORM* transform, int ntransform)
+{
+   int j;
+   for (j=0;j<ntransform;j++) {
       transform[j].cvalue = cos(transform[j].value);
       transform[j].svalue = sin(transform[j].value);
    }
    return transform;
 }
 
-PARAMS open_fish_image(PARAMS params, char fname[], FILE * fptr, int w, int h, int depth)
+BITMAP4* open_fish_image(PARAMS params, char fname[], BITMAP4* fishimage)
 {
+   int w,h,depth;
+   FILE * fptr;
     if (IsJPEG(fname))
 		params.imageformat = JPG;
 #ifdef ADDPNG
@@ -128,25 +159,26 @@ PARAMS open_fish_image(PARAMS params, char fname[], FILE * fptr, int w, int h, i
    	}
 	}
 	fclose(fptr);
-    params.fishwidth = w;
+   params.fishwidth = w;
 	params.fishheight = h;
 
-    return params;
+   return fishimage;
 }
 
-BITMAP4* create_persp_image(BITMAP4* perspimage)
+BITMAP4* create_persp_image(BITMAP4* perspimage,PARAMS params)
 {
+   //printf("")
     if ((perspimage = Create_Bitmap(params.perspwidth,params.perspheight)) == NULL) {
       fprintf(stderr,"Failed to malloc perspective image\n");
-      exit(-1);
+      return NULL;
    }
    Erase_Bitmap(perspimage,params.perspwidth,params.perspheight,params.missingcolour);
    return perspimage;
 }
 
-BITMAP4* convert(PARAMS params,BITMAP4* perspimage)
+BITMAP4* convert(PARAMS params,BITMAP4* perspimage, BITMAP4* fishimage,TRANSFORM* transform, int ntransform)
 {
-    int i,j,ai,aj,u,v,index;
+    int i,j,ai,aj,u,v,index,k;
     double x,y,r,phi,theta;
     RGB rgbsum,zero = {0,0,0};
     XYZ p,q;
@@ -163,7 +195,7 @@ BITMAP4* convert(PARAMS params,BITMAP4* perspimage)
      	         y = j + aj / (double)params.antialias;
 
 					// Calculate vector to each pixel in the perspective image 
-					CameraRay(x,y,&p);
+					p = CameraRay(x,y,&p,params);
 
 					// Apply rotations in order
 				   for (k=0;k<ntransform;k++) {
@@ -222,12 +254,15 @@ BITMAP4* convert(PARAMS params,BITMAP4* perspimage)
 
 		}
 	}
-    return perspimage;
+   //free(transform);
+   //free(fishimage);
+   return perspimage;
 }
 
 
-void write_file(PARAMS params, FILE * fptr, char fname[], char basename[], BITMAP4* perspimage)
+void write_file(PARAMS params, char fname[], char basename[], BITMAP4* perspimage)
 {
+   FILE *fptr;
     strcpy(fname,basename);
 	if (params.imageformat == JPG) {
 		strcat(fname,"_persp.jpg");
@@ -249,6 +284,15 @@ void write_file(PARAMS params, FILE * fptr, char fname[], char basename[], BITMA
    	Write_Bitmap(fptr,perspimage,params.perspwidth,params.perspheight,12);
 	}
 	fclose(fptr);
+
+   //free(perspimage);
+}
+
+void free_memory(BITMAP4* fishimage, BITMAP4* perspimage, TRANSFORM* transform)
+{
+   free(fishimage);
+   free(perspimage);
+   free(transform);
 }
 
 /*    
@@ -262,7 +306,7 @@ void write_file(PARAMS params, FILE * fptr, char fname[], char basename[], BITMA
         |          |
      p2 +----------+ p3
 */    
-void CameraRay(double x,double y,XYZ *p)
+XYZ CameraRay(double x,double y,XYZ *p, PARAMS params)
 {
    double h,v;
 	double dh,dv;
@@ -307,6 +351,10 @@ void CameraRay(double x,double y,XYZ *p)
    p->x = p1.x + h * deltah.x + v * deltav.x;
    p->y = p1.y + h * deltah.y + v * deltav.y;
    p->z = p1.z + h * deltah.z + v * deltav.z;
+
+   //fprintf(stderr,"Finish of the CameraRay!\n");
+
+   return *p;
 }
 
 /* 
@@ -324,7 +372,7 @@ XYZ VectorSum(double d1,XYZ p1,double d2,XYZ p2,double d3,XYZ p3,double d4,XYZ p
    return(sum); 
 }  
 
-void GiveUsage(char *s)
+void GiveUsage(char *s,PARAMS params)
 {
    fprintf(stderr,"Usage: %s [options] fisheyeimage\n",s);
    fprintf(stderr,"Options\n");
@@ -376,7 +424,7 @@ void Normalise(XYZ *p)
    }
 }
 
-void Init(void)
+void Init(PARAMS params)
 {
 	params.fishfov         = 180;
 	params.fishcenterx     = -1;
@@ -406,7 +454,7 @@ void Init(void)
    Two files, one for x coordinate and one for y coordinate
    https://trac.ffmpeg.org/wiki/RemapFilter
 */
-void MakeRemap(char *bn)
+void MakeRemap(char *bn,PARAMS params, TRANSFORM* transform, int ntransform)
 {
    int i,j,k,ix,iy,u,v;
    char fname[256];
@@ -430,7 +478,7 @@ void MakeRemap(char *bn)
 			iy = -1;
 
 			// Camera ray
-         CameraRay((double)i,(double)j,&p);
+         CameraRay((double)i,(double)j,&p,params);
 
 			// Apply rotations
          for (k=0;k<ntransform;k++) {

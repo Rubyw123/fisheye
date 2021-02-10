@@ -50,15 +50,19 @@ typedef struct {
 #define MODULUS(p) (sqrt(p.x*p.x + p.y*p.y + p.z*p.z))
 
 // Prototypes
-void CameraRay(double,double,XYZ *);
+XYZ CameraRay(double,double,XYZ *, PARAMS);
 XYZ VectorSum(double,XYZ,double,XYZ,double,XYZ,double,XYZ);
-void GiveUsage(char *);
+void GiveUsage(char *,PARAMS);
 double GetRunTime(void);
 void Normalise(XYZ *);
-void Init(void);
-void MakeRemap(char *);
-TRANSFORM* transform(TRANSFORM*,int);
-PARAMS open_fish_image(PARAMS,char,FILE*,int,int,int);
-void create_persp_image(BITMAP4*);
-BITMAP4* convert(PARAMS,BITMAP4*);
-void write_file(PARAMS,FILE*,char,char,BITMAP4*);
+void Init(PARAMS);
+void MakeRemap(char *,PARAMS, TRANSFORM*,int);
+TRANSFORM* transforming(TRANSFORM*,int);
+BITMAP4* open_fish_image(PARAMS,char*,BITMAP4*);
+BITMAP4* create_persp_image(BITMAP4*,PARAMS);
+BITMAP4* convert(PARAMS,BITMAP4*,BITMAP4*, TRANSFORM*,int);
+void write_file(PARAMS,char*,char*,BITMAP4*);
+void debug_info(PARAMS, TRANSFORM*,int);
+PARAMS params_check(PARAMS);
+TRANSFORM* create_transform(int,int,int,int);
+void free_memory(BITMAP4*,BITMAP4*,TRANSFORM*);
