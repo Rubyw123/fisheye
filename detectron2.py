@@ -6,10 +6,11 @@ https://github.com/facebookresearch/detectron2
 # pylint: disable=import-error,no-name-in-module,invalid-name,broad-except
 
 import torch
-from detectron2.data.datasets import register_coco_instance
+#from detectron2.data.datasets import register_coco_instance
 from detectron2.utils.logger import setup_logger
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
+from detectron2 import model_zoo
 import settings
 from util.logger import get_logger
 
@@ -26,7 +27,7 @@ with open(settings.DETECTRON2_CLASSES_OF_INTEREST_PATH, 'r') as coi_file:
 
 # initialize model with weights and config
 
-register_coco_instances("persp_train",{}, "trainval.json","./images")
+#register_coco_instances("persp_train",{}, "trainval.json","./images")
 cfg = get_cfg()
 cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
 '''
@@ -34,7 +35,8 @@ cfg.DATASETS.TRAIN = ("persp_train",)
 cfg.DATASETS.TEST = ()
 '''
 cfg.DATALOADER.NUM_WORKERS = 2
-cfg.MODEL.WEIGHTS = "./model_final.pth"  # Let training initialize from model zoo
+#cfg.MODEL.WEIGHTS = "../data/detectron2/model_final.pth"  # Let training initialize from model zoo
+cfg.MODEL.WEIGHTS = settings.DETECTRON2_WEIGHTS_PATH
 '''
 cfg.SOLVER.IMS_PER_BATCH = 2
 cfg.SOLVER.BASE_LR = 0.00025  # pick a good LR
@@ -44,7 +46,7 @@ cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE =  512  # faster, and good enough for t
 '''
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 2  # only has one class (ballon). (see https://detectron2.readthedocs.io/tutorials/datasets.html#update-the-config-for-new-datasets)
 # NOTE: this config means the number of classes, but a few popular unofficial tutorials incorrect uses num_classes+1 here.
-cfg..MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5
 '''
 cfg.merge_from_file(settings.DETECTRON2_CONFIG_PATH)
 cfg.MODEL.WEIGHTS = settings.DETECTRON2_WEIGHTS_PATH
@@ -100,7 +102,7 @@ def get_bounding_boxes(image):
         class_id = int(pred)
         _class = CLASSES[class_id]
         _classes.append(_class)
-        confidence = float(output['instances'].scroes[i])
+        confidence = float(outputs['instances'].scores[i])
         _confidences.append(confidence)
         _box =  outputs['instances'].pred_boxes[i]
         box_array = convert_box_to_array(_box)
