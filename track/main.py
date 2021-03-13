@@ -4,8 +4,6 @@ from CarTrack import *
 
 COLOR = (255,0,255)
 
-def VideoCapture(video):
-
 def parser():
     parser = argparse.ArgumentParser(description="Tracking with Detectron2")
     parser.add_argument("-input",type = str,default="")

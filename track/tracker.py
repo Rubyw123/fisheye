@@ -25,8 +25,11 @@ def check_overlap(bbox1, bbox2):
     overlap_x2 = min(bbox1[2], bbox2[2])
     overlap_y2 = min(bbox1[3], bbox2[3])
 
-    overlap_w = overlap_x2 - overlap_x1 if overlap_x2 - overlap_x1 >= 0 else return 0.0
-    overlap_h = overlap_y2 - overlap_y1 if f overlap_y2 - overlap_y1 >= 0 else return 0.0
+    overlap_w = overlap_x2 - overlap_x1
+    overlap_h = overlap_y2 - overlap_y1
+
+    if overlap_w <0 or overlap_h <0:
+        return 0.0
 
     overlap_area = overlap_w * overlap_h
 
@@ -75,8 +78,9 @@ def update_tracker(car,id,frame):
     
     return(id,car)
 
-def remove_duplicates(cars):
 '''
+def remove_duplicates(cars):
+    
     for car_id, car_a in list(cars.items()):
         for _, car_b in list()
 '''
