@@ -43,7 +43,11 @@ class CarTrack():
         for _id, car in self.cars.items():
             (x1,y1,x2,y2) = [int(v) for v in car.bounding_box]
             cv2.rectangle(f,(x1,y1),(x2,y2),self.color,1)
-            car_info = _id if car.group is None else '{0} {1}, {2}'.format(car.group, _id, str(car.group_confidence[:4]))
-            cv2.putText(frame,car_info,(x1,y1-5),cv2.FONT_HERSHEY_COMPLEX,1,self.color,1,cv2.LINE_AA)
+            if car.group is not None:
+                car_info = '{0} {1}, {2}'.format(car.group, str(_id), str(car.group_confidence)[:4])
+            else:
+                car_info = str(_id)
+            #car_info = str(_id) if car.group is None else '{0} {1}, {2}'.format(car.group, str(_id), str(car.group_confidence[:4]))
+            cv2.putText(f,car_info,(x1,y1-5),cv2.FONT_HERSHEY_COMPLEX,1,self.color,1,cv2.LINE_AA)
         
-        return frame
+        return f

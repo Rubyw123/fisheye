@@ -11,8 +11,6 @@ from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
 
-predictor
-CLASSES
 
 class Detector():
 
@@ -21,9 +19,10 @@ class Detector():
         self.num_classes = num_classes
         self.weights_path = weights_path
         self.thresh = thresh
+        self.classes = {}
 
         with open(self.path, 'r') as classes_file:
-            global CLASSES = dict(enumerate([line.strip() for line in classes_file.readlines()]))
+            self.classes = dict(enumerate([line.strip() for line in classes_file.readlines()]))
 
 
         # Config and weight of detectron2 model
@@ -39,10 +38,10 @@ class Detector():
         else:
             cfg.MODEL.DEVICE = 'cpu'
 
-        predictor = DefaultPredictor(cfg)
+        self.predictor = DefaultPredictor(cfg)
 
 
-    def convert_box_to_array(box):
+    def convert_box_to_array(self,box):
         '''
         Detectron2 returns results as a Boxes class
         (https://detectron2.readthedocs.io/modules/structures.html#detectron2.structures.Boxes).
@@ -64,15 +63,15 @@ class Detector():
         '''
         return res
 
-    def get_bounding_boxes(image):
+    def get_bounding_boxes(self,image):
         '''
         Return a list of bounding boxes of objects detected,
         their classes and the confidences of the detections made.
         '''
         try:
-            outputs = predictor(image)
+            outputs = self.predictor(image)
         except Exception as error:
-            #logger.error(error)
+            print('Error detectrion!')
 
         _classes = []
         _confidences = []
@@ -80,12 +79,12 @@ class Detector():
 
         for i, pred in enumerate(outputs["instances"].pred_classes):
             class_id = int(pred)
-            _class = CLASSES[class_id]
+            _class = self.classes[class_id]
             _classes.append(_class)
             confidence = float(outputs['instances'].scores[i])
             _confidences.append(confidence)
             _box =  outputs['instances'].pred_boxes[i]
-            box_array = convert_box_to_array(_box)
+            box_array = self.convert_box_to_array(_box)
             _bounding_boxes.append(box_array)
 
         return _bounding_boxes, _classes, _confidences

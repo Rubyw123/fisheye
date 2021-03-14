@@ -4,8 +4,15 @@ id = 0
 
 
 def _csrt_create(bbox,frame):
+    new_bbox = []
+    for v in bbox:
+        new_bbox.append(v)
+    
+    new_bbox[2] = new_bbox[2]-new_bbox[0]
+    new_bbox[3] = new_bbox[3]-new_bbox[1]
+    
     tracker = cv2.TrackerCSRT_create()
-    tracker.init(frame,tuple(bbox))
+    tracker.init(frame,tuple(new_bbox))
     return tracker
 
 def generate_id():
@@ -41,7 +48,7 @@ def check_overlap(bbox1, bbox2):
 
 
 def remove_car(cars, existing_cars):
-    for _id, car in cars.items():
+    for _id, car in list(cars.items()):
         if _id not in existing_cars:
             del cars[_id]
     return cars
@@ -61,11 +68,11 @@ def add_car(bboxes,classes,confidences,cars,frame):
                 car_found = True
                 if _id not in existing_cars:
                     existing_cars.append(_id)
-                car.update(box,_group,_confidence,_tracker)
+                car.update(bbox,_group,_confidence,_tracker)
                 break
         
         if not car_found:
-            _car = Car(box,_group,_confidence,_tracker)
+            _car = Car(bbox,_group,_confidence,_tracker)
             car_id = generate_id()
             cars[car_id] = _car
     cars = remove_car(cars,existing_cars)

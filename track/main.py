@@ -1,15 +1,16 @@
 import cv2
 import argparse
 from CarTrack import *
+from detector import *
 
 COLOR = (255,0,255)
 
 def parser():
     parser = argparse.ArgumentParser(description="Tracking with Detectron2")
-    parser.add_argument("-input",type = str,default="")
-    parser.add_argument("-output",type = str,default="")
+    parser.add_argument("-input",type = str,default="./input/3_persp.avi")
+    parser.add_argument("-output",type = str,default="./output/3_persp_out.avi")
     parser.add_argument("-weights",default = "./model_final.pth")
-    parser.add_argument("-show",action='store_true')
+    parser.add_argument("-show",action='store_false')
     parser.add_argument("-thresh",type=float,default=.50)
     parser.add_argument("-classes",default="./coco_classes.txt")
     parser.add_argument("-numc",type=int,default="2")
@@ -33,12 +34,12 @@ if __name__ == '__main__':
     fps = get_fps(cap)
 
     ret,frame = cap.read()
-    f_height, f_width = frame.shape
+    f_height, f_width, _ = frame.shape
 
     detector = Detector(args.classes,args.numc,args.weights,args.thresh)
     track = CarTrack(frame,COLOR,fps,detector)
 
-    saved_video = set_saved_video(cap,args.ouput,(f_width,f_height))
+    saved_video = set_saved_video(cap,args.output,(f_width,f_height))
 
     try:
         while cap.isOpened():

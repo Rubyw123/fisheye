@@ -2,7 +2,7 @@ class Car:
     
     def __init__(self, _bounding_box, _group, _confidence, _tracker):
         self.bounding_box = _bounding_box
-        self.group = _type
+        self.group = _group
         self.group_confidence = _confidence
         self.tracker = _tracker
 
