@@ -10,7 +10,7 @@ def parser():
     parser.add_argument("-input",type = str,default="./input/3_persp.avi")
     parser.add_argument("-output",type = str,default="./output/3_persp_out.avi")
     parser.add_argument("-weights",default = "./model_final.pth")
-    parser.add_argument("-show",action='store_false')
+    parser.add_argument("-show",action='store_true')
     parser.add_argument("-thresh",type=float,default=.50)
     parser.add_argument("-classes",default="./coco_classes.txt")
     parser.add_argument("-numc",type=int,default="2")

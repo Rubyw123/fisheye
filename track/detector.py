@@ -56,11 +56,11 @@ class Detector():
             for ind_val in val:
                 res.append(float(ind_val))
 
-        '''
+        
         # Convert x2, y2 into w, h
         res[2] = res[2] - res[0]
         res[3] = res[3] - res[1]
-        '''
+        
         return res
 
     def get_bounding_boxes(self,image):
@@ -78,11 +78,14 @@ class Detector():
         _bounding_boxes = []
 
         for i, pred in enumerate(outputs["instances"].pred_classes):
+
             class_id = int(pred)
             _class = self.classes[class_id]
             _classes.append(_class)
+
             confidence = float(outputs['instances'].scores[i])
             _confidences.append(confidence)
+
             _box =  outputs['instances'].pred_boxes[i]
             box_array = self.convert_box_to_array(_box)
             _bounding_boxes.append(box_array)

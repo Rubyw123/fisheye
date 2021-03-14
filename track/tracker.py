@@ -4,15 +4,8 @@ id = 0
 
 
 def _csrt_create(bbox,frame):
-    new_bbox = []
-    for v in bbox:
-        new_bbox.append(v)
-    
-    new_bbox[2] = new_bbox[2]-new_bbox[0]
-    new_bbox[3] = new_bbox[3]-new_bbox[1]
-    
     tracker = cv2.TrackerCSRT_create()
-    tracker.init(frame,tuple(new_bbox))
+    tracker.init(frame,tuple(bbox))
     return tracker
 
 def generate_id():
@@ -24,32 +17,43 @@ def get_bbox_info(bbox):
     return (bbox[2]-bbox[0]),(bbox[3]-bbox[1])
 
 def check_overlap(bbox1, bbox2):
-    bbox1_w, bbox1_h = get_bbox_info(bbox1)
-    bbox2_w, bbox2_h = get_bbox_info(bbox2)
+    bbox1_x1 = bbox1[0]
+    bbox1_y1 = bbox1[1]
+    bbox1_x2 = bbox1[0] + bbox1[2]
+    bbox1_y2 = bbox1[1] + bbox1[3]
 
-    overlap_x1 = max(bbox1[0], bbox2[0])
-    overlap_y1 = max(bbox1[1], bbox2[1])
-    overlap_x2 = min(bbox1[2], bbox2[2])
-    overlap_y2 = min(bbox1[3], bbox2[3])
+    bbox2_x1 = bbox2[0]
+    bbox2_y1 = bbox2[1]
+    bbox2_x2 = bbox2[0] + bbox2[2]
+    bbox2_y2 = bbox2[1] + bbox2[3]
 
-    overlap_w = overlap_x2 - overlap_x1
-    overlap_h = overlap_y2 - overlap_y1
+    overlap_x1 = max(bbox1_x1, bbox2_x1)
+    overlap_y1 = max(bbox1_y1, bbox2_y1)
+    overlap_x2 = min(bbox1_x2, bbox2_x2)
+    overlap_y2 = min(bbox1_y2, bbox2_y2)
 
-    if overlap_w <0 or overlap_h <0:
+    overlap_width = overlap_x2 - overlap_x1
+    overlap_height = overlap_y2 - overlap_y1
+
+    if overlap_width < 0 or overlap_height < 0:
         return 0.0
 
-    overlap_area = overlap_w * overlap_h
+    overlap_area = overlap_width * overlap_height
 
-    bbox1_area = bbox1_w * bbox1_h
-    bbox2_area = bbox2_w * bbox2_h
-    min_area = min(bbox1_area,bbox2_area)
-    overlap = overlap_area/min_area
-    return overlap        
+    bbox1_area = (bbox1_x2 - bbox1_x1) * (bbox1_y2 - bbox1_y1)
+    bbox2_area = (bbox2_x2 - bbox2_x1) * (bbox2_y2 - bbox2_y1)
+    smaller_area = bbox1_area if bbox1_area < bbox2_area else bbox2_area
+
+    epsilon = 1e-5 # small value to prevent division by zero
+    overlap = overlap_area / (smaller_area + epsilon)
+    return overlap
 
 
 def remove_car(cars, existing_cars):
     for _id, car in list(cars.items()):
         if _id not in existing_cars:
+            car.detection_fail += 1
+        if car.detection_fail >= 2:
             del cars[_id]
     return cars
 
@@ -78,19 +82,28 @@ def add_car(bboxes,classes,confidences,cars,frame):
     cars = remove_car(cars,existing_cars)
     return cars
 
-def update_tracker(car,id,frame):
+def update_tracker(car,_id,frame):
     success, bbox = car.tracker.update(frame)
     if success:
+        car.tracking_fail = 0
         car.update(bbox)
+    else:
+        car.tracking_fail += 1
     
-    return(id,car)
+    return(_id,car)
 
-'''
+
 def remove_duplicates(cars):
     
     for car_id, car_a in list(cars.items()):
-        for _, car_b in list()
-'''
+        for _, car_b in list(cars.items()):
+            if car_a == car_b:
+                break
+            if check_overlap(car_a.bounding_box, car_b.bounding_box) >= 0.6 and car_id in cars:
+                del  cars[car_id]
+    return cars
+
+
 
 
 
