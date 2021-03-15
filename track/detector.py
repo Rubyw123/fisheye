@@ -10,6 +10,7 @@ from detectron2.utils.logger import setup_logger
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 from detectron2 import model_zoo
+from detectron2.structures import Boxes
 
 
 class Detector():
@@ -21,9 +22,8 @@ class Detector():
         self.thresh = thresh
         self.classes = {}
 
-        with open(self.path, 'r') as classes_file:
-            self.classes = dict(enumerate([line.strip() for line in classes_file.readlines()]))
-
+        with open(self.path, 'r') as _file:
+            self.classes = dict(enumerate([line.strip() for line in _file.readlines()]))
 
         # Config and weight of detectron2 model
         cfg = get_cfg()
@@ -32,7 +32,6 @@ class Detector():
         cfg.MODEL.WEIGHTS = self.weights_path
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = self.num_classes
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.thresh
-
         if torch.cuda.is_available():
             cfg.MODEL.DEVICE = 'cuda'
         else:
@@ -40,54 +39,48 @@ class Detector():
 
         self.predictor = DefaultPredictor(cfg)
 
+    def get_detection_output(self,image):
+        outputs = self.predictor(image)
 
-    def convert_box_to_array(self,box):
-        '''
-        Detectron2 returns results as a Boxes class
-        (https://detectron2.readthedocs.io/modules/structures.html#detectron2.structures.Boxes).
-        These have a lot of useful extra methods (computing area etc) however can't be easily
-        serialized, so it's a pain to transfer these predictions over the internet (e.g., if
-        this is being used in the cloud, and wanting to send predictions back) so this method
-        converts it into a standard array format. Detectron2 also returns results in (x1, y1, x2, y2)
-        format, so this method converts it into (x1, y1, w, h).
-        '''
-        res = []
-        for val in box:
-            for ind_val in val:
-                res.append(float(ind_val))
+        groups = []
+        scores = []
+        bboxs = []
+        areas = []
+        centers = []
 
-        
-        # Convert x2, y2 into w, h
-        res[2] = res[2] - res[0]
-        res[3] = res[3] - res[1]
-        
-        return res
+        for i, group in enumerate(outputs["instances"].pred_classes):
+            array = []
 
-    def get_bounding_boxes(self,image):
-        '''
-        Return a list of bounding boxes of objects detected,
-        their classes and the confidences of the detections made.
-        '''
-        try:
-            outputs = self.predictor(image)
-        except Exception as error:
-            print('Error detectrion!')
+            # Get group classes
+            if int(group) == 0:
+                groups.append('car')
+            else:
+                groups.append('truck')
 
-        _classes = []
-        _confidences = []
-        _bounding_boxes = []
-
-        for i, pred in enumerate(outputs["instances"].pred_classes):
-
+            '''
             class_id = int(pred)
             _class = self.classes[class_id]
             _classes.append(_class)
+            '''
+            #Get scores of groups
+            score = float(outputs['instances'].scores[i])
+            scores.append(score)
 
-            confidence = float(outputs['instances'].scores[i])
-            _confidences.append(confidence)
+            #Get bboxs(x1,y1,x2,y2) in an array
+            bbox =  outputs['instances'].pred_boxes[i]
+            for j in bbox:
+                for k in j:
+                    array.append(float(j))
+            
+            #bbox_list = self.convert_box_to_array(_box)
+            bboxs.append(array)
 
-            _box =  outputs['instances'].pred_boxes[i]
-            box_array = self.convert_box_to_array(_box)
-            _bounding_boxes.append(box_array)
+            #Get area of boxes
+            area = float(bbox.area()[i])
+            areas.append(area)
 
-        return _bounding_boxes, _classes, _confidences
+            #Get center of boxes
+            c_x,c_y = bbox.get_center()[i]
+            centers.append((c_x,c_y))
+
+        return bboxs, groups, scores,areas,centers
