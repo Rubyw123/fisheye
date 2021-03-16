@@ -61,6 +61,7 @@ class Detector():
             class_id = int(pred)
             _class = self.classes[class_id]
             _classes.append(_class)
+
             '''
             #Get scores of groups
             score = float(outputs['instances'].scores[i])
@@ -68,19 +69,23 @@ class Detector():
 
             #Get bboxs(x1,y1,x2,y2) in an array
             bbox =  outputs['instances'].pred_boxes[i]
+            
             for j in bbox:
                 for k in j:
-                    array.append(float(j))
+                    array.append(float(k))
             
             #bbox_list = self.convert_box_to_array(_box)
             bboxs.append(array)
+            
 
             #Get area of boxes
-            area = float(bbox.area()[i])
+            area = float(bbox.area())
             areas.append(area)
-
+            
             #Get center of boxes
-            c_x,c_y = bbox.get_center()[i]
-            centers.append((c_x,c_y))
+            c = bbox.get_centers()
+           
+            centers.append(c)
 
         return bboxs, groups, scores,areas,centers
+

@@ -20,7 +20,7 @@ class CarTrack():
         self.frame = frame
         cars_list = list(self.cars.items())
         cars_list = Parallel(n_jobs=NUM_CORES, prefer='threads')(
-            delayed(updating_from_tracker)(car,i,self.frame)for i,car in cars
+            delayed(updating_from_tracker)(car,i,self.frame)for i,car in cars_list
         )
         self.cars = dict(cars_list)
 
@@ -42,10 +42,16 @@ class CarTrack():
         f = self.frame
 
         for _id, car in self.cars.items():
-            (x1,y1,w,h) = [int(v) for v in car.bounding_box]
-            cv2.rectangle(f,(x1,y1),(x1+w,y1+h),self.color,2)
+            (x1,y1,x2,y2) = [int(v) for v in car.bbox]
+            '''
+            print ('x1 and x2 = '+ '('+str(x1)+',' +str(y1)+')')
+            print('x2 value = ' + str(x2)+'/')
+            print('y2 value = ' +str(y2)+'/')
+            #print('x1 + w = '+(x2-x1+))
+            '''
+            cv2.rectangle(f,(x1,y1),(x2,y2),self.color,2)
             if car.group is not None:
-                car_info = '{0} {1}, {2}'.format(car.group, str(_id), str(car.group_confidence)[:4])
+                car_info = '{0} {1}, {2}'.format(car.group, str(_id), str(car.score)[:4])
             else:
                 car_info = str(_id)
             cv2.putText(f,car_info,(x1,y1-5),cv2.FONT_HERSHEY_COMPLEX,1,self.color,2,cv2.LINE_AA)

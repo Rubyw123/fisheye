@@ -32,7 +32,7 @@ def get_iou(bbox1, bbox2):
     irec.append(min(bbox1[2], bbox2[2]))
     irec.append(min(bbox1[3], bbox2[3]))
 
-    #irec_w, irec_h = get_bbox_info(irec)
+    irec_w, irec_h = get_bbox_info(irec)
 
     if irec_w < 0 or irec_h < 0:
         return 0.0
@@ -50,7 +50,7 @@ def get_bbox_points(bbox):
     top_right = (bbox[2],bbox[0])
     bottom_left = (bbox[0],bbox[3])
     bottom_right = (bbox[2],bbox[3])
-    return(top_left,top_right,bottom_left,bottom_right))
+    return(top_left,top_right,bottom_left,bottom_right)
 
 def get_center(bbox):
     x1,y1,x2,y2 = bbox

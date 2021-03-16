@@ -19,7 +19,7 @@ def remove_inactive_cars(cars, active_cars):
         if i not in active_cars:
             car.detection_fail += 1
         if car.detection_fail >= 2:
-            del cars[_id]
+            del cars[i]
     return cars
 
 def check_car_tracked(box,cars):
