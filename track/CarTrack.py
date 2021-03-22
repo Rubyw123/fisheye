@@ -16,13 +16,17 @@ class CarTrack():
         self.fps = fps
         self.count = 0
         self.detector = detector
+        self.logger = []
         
-        # Set up a csv writer for ouput file
+        # Set up a list for output data
+        header = ['Frame_id','Car_id','Car_p1','Car_p2','Car_p3','Car_p4','Car_center']
+        logger.append(header)
+
+        '''
         with open('./data.csv','w')as file:
             csv_writer = csv.writer(file)
-        self.csv_writer = csv_writer
-        self.csv_writer.writerow(['Frame_id','Car_id','Car_p1','Car_p2','Car_p3','Car_p4','Car_center'])
-
+            self.csv_writer.writerow(['Frame_id','Car_id','Car_p1','Car_p2','Car_p3','Car_p4','Car_center'])
+        '''
         self.updating_from_detection()
 
     
@@ -46,7 +50,7 @@ class CarTrack():
 
     def updating_from_detection(self):
         bboxes, groups, scores,centers = self.detector.get_detection_output(self.frame)
-        self.cars = add_cars(bboxes,groups,scores, centers,self.cars,self.frame, self.frame_count,self.csv_writer)
+        self.cars = add_cars(bboxes,groups,scores, centers,self.cars,self.frame, self.frame_count,self.logger)
         self.cars = remove_duplicates(self.cars)
 
     def visualize(self):
@@ -62,3 +66,10 @@ class CarTrack():
             cv2.putText(f,car_info,(x1,y1-5),cv2.FONT_HERSHEY_COMPLEX,1,self.color,2,cv2.LINE_AA)
         
         return f
+    
+    def write_csv_data(self,file_name):
+        logger = self.logger
+
+        with open(file_name,'w') as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerows(logger)

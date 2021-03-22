@@ -29,14 +29,14 @@ def check_car_tracked(box,cars):
             return i 
     return None
 
-def write_csv_data(csv_writer,frame_count,car_id,bbox,center):
+def write_logger_data(logger,frame_count,car_id,bbox,center):
     points = get_bbox_points(bbox)
     data_info = [frame_count,car_id,points[0],points[1],points[2],points[3],center]
-    csv_writer.writerow(data_info)
+    logger.append(data_info)
 
 
 
-def add_cars(bboxes,groups,scores,centers,cars,frame,frame_count,csv_writer):
+def add_cars(bboxes,groups,scores,centers,cars,frame,frame_count,logger):
 
     active_cars = []
     if bboxes is not None and groups is not None and scores is not None:
@@ -50,8 +50,8 @@ def add_cars(bboxes,groups,scores,centers,cars,frame,frame_count,csv_writer):
                 cars[car_id].update(bbox,center)
                 active_cars.append(car_id)
 
-                # wrtie to output csv file
-                write_csv_data(csv_writer,frame_count,car_id,bbox,center)
+                # add car info to logger
+                write_logger_data(logger,frame_count,car_id,bbox,center)
 
             else:
                 tracker = _csrt_create(bbox,frame)
@@ -60,8 +60,8 @@ def add_cars(bboxes,groups,scores,centers,cars,frame,frame_count,csv_writer):
                 new_car = Car(bbox,group,score,center,tracker)
                 cars[car_id] = new_car
 
-                # wrtie to output csv file
-                write_csv_data(csv_writer,frame_count,car_id,bbox,center)
+                # add car info to logger
+                write_logger_data(logger,frame_count,car_id,bbox,center)
 
         cars = remove_inactive_cars(cars,active_cars)
     return cars
@@ -70,15 +70,15 @@ def updating_from_tracker(car,i,frame,frame_count,csv_writer):
     ret, bbox = car.tracker.update(frame)
     if ret:
         car.tracking_fail = 0
-        
+
         #convert (x,y,w,h) to (x1,y1,x2,y2)
         (x,y,w,h) = bbox
         new_bbox = (x,y,x+w,y+h)
         new_center = get_center(new_bbox)
         car.update(new_bbox,new_center)
 
-        # wrtie to output csv file        
-        write_csv_data(csv_writer,frame_count,i,new_bbox,new_center)
+        # add car info to logger
+        write_logger_data(logger,frame_count,i,new_bbox,new_center)
     else:
         car.tracking_fail += 1
     

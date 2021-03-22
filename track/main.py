@@ -1,5 +1,6 @@
 import cv2
 import argparse
+import os
 from CarTrack import *
 from detector import *
 
@@ -41,6 +42,9 @@ if __name__ == '__main__':
 
     saved_video = set_saved_video(cap,args.output,(f_width,f_height))
 
+    (path, filename) = os.path.split(args.output)
+    (f,ext) = os.path.splitext(filename)
+
     try:
         while cap.isOpened():
             if not ret:
@@ -60,6 +64,8 @@ if __name__ == '__main__':
         cap.release()
         saved_video.release()
         cv2.destroyAllWindows()
+
+        track.write_csv_data(f)
             
 
 
