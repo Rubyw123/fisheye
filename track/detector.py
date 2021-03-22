@@ -45,7 +45,6 @@ class Detector():
         groups = []
         scores = []
         bboxs = []
-        areas = []
         centers = []
 
         for i, group in enumerate(outputs["instances"].pred_classes):
@@ -57,12 +56,6 @@ class Detector():
             else:
                 groups.append('truck')
 
-            '''
-            class_id = int(pred)
-            _class = self.classes[class_id]
-            _classes.append(_class)
-
-            '''
             #Get scores of groups
             score = float(outputs['instances'].scores[i])
             scores.append(score)
@@ -77,15 +70,10 @@ class Detector():
             #bbox_list = self.convert_box_to_array(_box)
             bboxs.append(array)
             
-
-            #Get area of boxes
-            area = float(bbox.area())
-            areas.append(area)
-            
             #Get center of boxes
             c = bbox.get_centers()
            
             centers.append(c)
 
-        return bboxs, groups, scores,areas,centers
+        return bboxs, groups, scores,centers
 

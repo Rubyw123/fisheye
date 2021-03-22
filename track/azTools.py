@@ -46,11 +46,16 @@ def get_iou(bbox1, bbox2):
     return iou
 
 def get_bbox_points(bbox):
-    top_left = (bbox[0],bbox[1])
-    top_right = (bbox[2],bbox[0])
-    bottom_left = (bbox[0],bbox[3])
-    bottom_right = (bbox[2],bbox[3])
-    return(top_left,top_right,bottom_left,bottom_right)
+    '''
+    Return four points of a bbox as a list,
+    in order of top_left, top_right, bottom_left, bottom_right.
+    '''
+    points = []
+    points.append(tuple((bbox[0],bbox[1])))
+    points.append(tuple((bbox[2],bbox[0])))
+    points.append(tuple((bbox[0],bbox[3])))
+    points.append(tuple((bbox[2],bbox[3])))
+    return points
 
 def get_center(bbox):
     x1,y1,x2,y2 = bbox

@@ -1,5 +1,6 @@
 import cv2
 import multiprocessing
+import csv
 from tracker import *
 from joblib import Parallel,delayed
 
@@ -7,20 +8,30 @@ NUM_CORES = multiprocessing.cpu_count()
 
 class CarTrack():
 
-    def __init__(self,init_frame,color,fps,detector):
+    def __init__(self,init_frame,frame_count,color,fps,detector):
         self.frame = init_frame
+        self.frame_count = frame_count
         self.cars = {}
         self.color = color
         self.fps = fps
         self.count = 0
         self.detector = detector
+        
+        # Set up a csv writer for ouput file
+        with open('data.csv','w')as file:
+            csv_writer = csv.writer(file)
+        self.csv_writer = csv_writer
+        self.csv_writer.writerow(['Frame_id','Car_id','Car_p1','Car_p2','Car_p3','Car_p4','Car_center'])
+
+        self.updating_from_detection()
 
     
-    def updating_frame(self,frame):
+    def updating_frame(self,frame,frame_count):
         self.frame = frame
+        self.frame_count = frame_count
         cars_list = list(self.cars.items())
         cars_list = Parallel(n_jobs=NUM_CORES, prefer='threads')(
-            delayed(updating_from_tracker)(car,i,self.frame)for i,car in cars_list
+            delayed(updating_from_tracker)(car,i,self.frame,self.frame_count,self.csv_writer)for i,car in cars_list
         )
         self.cars = dict(cars_list)
 
@@ -34,8 +45,8 @@ class CarTrack():
         self.count += 1
 
     def updating_from_detection(self):
-        bboxes, groups, scores, areas,centers = self.detector.get_detection_output(self.frame)
-        self.cars = add_cars(bboxes,groups,scores, areas, centers,self.cars,self.frame)
+        bboxes, groups, scores,centers = self.detector.get_detection_output(self.frame)
+        self.cars = add_cars(bboxes,groups,scores, centers,self.cars,self.frame, self.frame_count,self.csv_writer)
         self.cars = remove_duplicates(self.cars)
 
     def visualize(self):
@@ -43,12 +54,6 @@ class CarTrack():
 
         for _id, car in self.cars.items():
             (x1,y1,x2,y2) = [int(v) for v in car.bbox]
-            '''
-            print ('x1 and x2 = '+ '('+str(x1)+',' +str(y1)+')')
-            print('x2 value = ' + str(x2)+'/')
-            print('y2 value = ' +str(y2)+'/')
-            #print('x1 + w = '+(x2-x1+))
-            '''
             cv2.rectangle(f,(x1,y1),(x2,y2),self.color,2)
             if car.group is not None:
                 car_info = '{0} {1}, {2}'.format(car.group, str(_id), str(car.score)[:4])

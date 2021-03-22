@@ -32,12 +32,12 @@ if __name__ == '__main__':
     video = args.input
     cap = cv2.VideoCapture(video)
     fps = get_fps(cap)
-
+    frame_count = 0
     ret,frame = cap.read()
     f_height, f_width, _ = frame.shape
 
     detector = Detector(args.classes,args.numc,args.weights,args.thresh)
-    track = CarTrack(frame,COLOR,fps,detector)
+    track = CarTrack(frame,frame_count,COLOR,fps,detector)
 
     saved_video = set_saved_video(cap,args.output,(f_width,f_height))
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
             if not ret:
                 break
 
-            track.updating_frame(frame)
+            track.updating_frame(frame,frame_count)
             tracked_frame = track.visualize()
 
             if args.output is not None:
