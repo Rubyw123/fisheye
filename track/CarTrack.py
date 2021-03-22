@@ -18,7 +18,7 @@ class CarTrack():
         self.detector = detector
         
         # Set up a csv writer for ouput file
-        with open('data.csv','w')as file:
+        with open('./data.csv','w')as file:
             csv_writer = csv.writer(file)
         self.csv_writer = csv_writer
         self.csv_writer.writerow(['Frame_id','Car_id','Car_p1','Car_p2','Car_p3','Car_p4','Car_center'])
