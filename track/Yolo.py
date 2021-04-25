@@ -1,3 +1,7 @@
+'''
+A Yolo detector performing Yolov4 detection on images
+'''
+
 from ctypes import *
 import darknet
 from azTools import *
@@ -17,8 +21,8 @@ class Yolo():
         self.width = darknet.network_width(self.network)
         self.height = darknet.network_height(self.network)
 
-        print("network_w: "+ str(self.width))
-        print("network_h: "+str(self.height))
+        #print("network_w: "+ str(self.width))
+        #print("network_h: "+str(self.height))
 
     
     def get_name(self):
@@ -65,6 +69,7 @@ class Yolo():
 
             scores.append(float(score))
 
+            #Translate the coordinates of bbox into original frame size
             array.append(float(x1*(i_width/416)))
             array.append(float(y1*(i_width/416)))
             array.append(float(x2*(i_height/416)))

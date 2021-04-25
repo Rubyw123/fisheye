@@ -1,3 +1,7 @@
+'''
+CarTrack class for detection and tracking of vehicles from video. Output a csv file.
+'''
+
 import cv2
 import multiprocessing
 import csv
@@ -18,18 +22,6 @@ class CarTrack():
         self.fps = fps
         self.count = 0
         self.detector = detector
-        '''
-        if detector.get_name() == 1:
-
-            # Resize frame for yolo format
-            width = detector.get_w()
-            height = detector.get_h()
-
-            f_rgb = cv2.cvtColor(init_frame,cv2.COLOR_BGR2RGB)
-
-            self.track_frame = cv2.resize(f_rgb,(width,height),interpolation = cv2.INTER_LINEAR)
-        '''
-
         self.logger = []
         
         # Set up a list for output data
@@ -43,19 +35,6 @@ class CarTrack():
         track_frame = frame
         self.frame_count = frame_count
 
-        '''
-        if self.detector.get_name() == 1:
-
-            # Resize frame for yolo format
-            width = self.detector.get_w()
-            height = self.detector.get_h()
-
-            f_rgb = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-
-            track_frame = cv2.resize(f_rgb,(width,height),interpolation = cv2.INTER_LINEAR)
-            print("Yolo!")
-
-        '''
         #Start tracker after first frame
         if frame_count > 0:
             cars_list = list(self.cars.items())
@@ -86,26 +65,7 @@ class CarTrack():
     def visualize(self):
         f = self.frame
         write_frame = f
-        '''
-        if self.detector.get_name() == 1:
-
-            # Resize frame for yolo format
-            width = self.detector.get_w()
-            height = self.detector.get_h()
-
-            f_rgb = cv2.cvtColor(f,cv2.COLOR_BGR2RGB)
-
-            write_frame = cv2.resize(f_rgb,(width,height),interpolation = cv2.INTER_LINEAR)
-        '''
-
-        '''
-        width = self.detector.get_w()
-        height = self.detector.get_h()
-
-        f_rgb = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-
-        f = cv2.resize(f_rgb,(width,height),interpolation = cv2.INTER_LINEAR)
-        '''
+        
         for car_id, car in self.cars.items():
             (x1,y1,x2,y2) = [int(v) for v in car.bbox]
             cv2.rectangle(f,(x1,y1),(x2,y2),self.color,2)

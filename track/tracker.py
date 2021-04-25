@@ -1,3 +1,7 @@
+'''
+Tracking functions for CarTrack
+'''
+
 import cv2
 import time
 from car import Car
@@ -9,10 +13,7 @@ IOU_THRESH = 0.6
 def csrt_create(bbox,frame):
     #convert (x1,y1,x2,y2) to (x,y,w,h)
     new_bbox = bbox.copy()
-    new_bbox[2] = new_bbox[2]-new_bbox[0]
-    new_bbox[3] = new_bbox[3]-new_bbox[1]
-    tracker = cv2.TrackerCSRT_create()
-    tracker.init(frame,tuple(new_bbox))
+    new_bbox[2] = new_bbox[2(new_bbox))
     return tracker
 
 def remove_inactive_cars(cars, active_cars):

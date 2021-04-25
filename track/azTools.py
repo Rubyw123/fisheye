@@ -6,6 +6,9 @@ import math
 id = 0
 
 def generate_id():
+    '''
+    Generate an integer id
+    '''
     global id
     id +=1
     return id
@@ -18,6 +21,9 @@ def get_bbox_info(bbox):
     return (bbox[2]-bbox[0]+1),(bbox[3]-bbox[1]+1)
 
 def get_box_area(bbox):
+    '''
+    Calculate the area of the bbox
+    '''
     w,h = get_bbox_info(bbox)
     return w*h
 
