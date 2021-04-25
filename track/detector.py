@@ -6,6 +6,7 @@ https://github.com/facebookresearch/detectron2
 # pylint: disable=import-error,no-name-in-module,invalid-name,broad-except
 
 import torch
+import numpy
 from detectron2.utils.logger import setup_logger
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
@@ -16,6 +17,7 @@ from detectron2.structures import Boxes
 class Detector():
 
     def __init__(self,path,num_classes,weights_path,thresh):
+        self.name = 0
         self.path = path
         self.num_classes = num_classes
         self.weights_path = weights_path
@@ -27,8 +29,8 @@ class Detector():
 
         # Config and weight of detectron2 model
         cfg = get_cfg()
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-        cfg.DATALOADER.NUM_WORKERS = 2
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml"))
+        cfg.DATALOADER.NUM_WORKERS = 4
         cfg.MODEL.WEIGHTS = self.weights_path
         cfg.MODEL.ROI_HEADS.NUM_CLASSES = self.num_classes
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.thresh
@@ -39,12 +41,15 @@ class Detector():
 
         self.predictor = DefaultPredictor(cfg)
 
+    def get_name(self):
+        return self.name
+
     def get_detection_output(self,image):
         outputs = self.predictor(image)
 
         groups = []
         scores = []
-        bboxs = []
+        bboxes = []
         centers = []
 
         for i, group in enumerate(outputs["instances"].pred_classes):
@@ -54,7 +59,7 @@ class Detector():
             if int(group) == 0:
                 groups.append('car')
             else:
-                groups.append('truck')
+                groups.append('car')
 
             #Get scores of groups
             score = float(outputs['instances'].scores[i])
@@ -68,12 +73,13 @@ class Detector():
                     array.append(float(k))
             
             #bbox_list = self.convert_box_to_array(_box)
-            bboxs.append(array)
+            bboxes.append(array)
             
-            #Get center of boxes
+            #Get center of boxes as tuple
             c = bbox.get_centers()
+            center = c.cpu().numpy().tolist()
            
-            centers.append(c)
+            centers.append((center[0][0],center[0][1]))
 
-        return bboxs, groups, scores,centers
+        return bboxes, groups, scores,centers
 

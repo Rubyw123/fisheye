@@ -3,18 +3,21 @@ import argparse
 import os
 from CarTrack import *
 from detector import *
+from Yolo import *
 
 COLOR = (255,0,255)
 
 def parser():
     parser = argparse.ArgumentParser(description="Tracking with Detectron2")
     parser.add_argument("-input",type = str,default="./input/3_persp.avi")
-    parser.add_argument("-output",type = str,default="./output/3_persp_out(1).avi")
-    parser.add_argument("-weights",default = "./model_final.pth")
+    parser.add_argument("-output",type = str,default="./output/3_persp_demo1.avi")
+    parser.add_argument("-weights",default = "./model_final1.pth")
+    parser.add_argument("-cfg",default = "./yolo/custom-yolov4-detector.cfg")
+    parser.add_argument("-data",default = "./yolo/custom.data")
     parser.add_argument("-show",action='store_true')
     parser.add_argument("-thresh",type=float,default=.50)
     parser.add_argument("-classes",default="./coco_classes.txt")
-    parser.add_argument("-numc",type=int,default="2")
+    parser.add_argument("-numc",type=int,default="3")
     return parser.parse_args()
 
 def get_fps(video):
@@ -37,7 +40,13 @@ if __name__ == '__main__':
     ret,frame = cap.read()
     f_height, f_width, _ = frame.shape
 
+
+    #Detectron2 Detector
     detector = Detector(args.classes,args.numc,args.weights,args.thresh)
+
+    #yolo Detector
+    #detector = Yolo(args.data, args.weights,args.cfg,args.thresh)
+
     track = CarTrack(frame,frame_count,COLOR,fps,detector)
 
     saved_video = set_saved_video(cap,args.output,(f_width,f_height))
@@ -58,6 +67,8 @@ if __name__ == '__main__':
             
             if args.show:
                 cv2.imshow('Tracking with Detectron2',tracked_frame)
+
+            frame_count += 1
 
             ret,frame = cap.read()
     finally:
