@@ -2,7 +2,7 @@ import cv2
 import argparse
 import os
 from CarTrack import *
-from detector import *
+from Detectron2 import *
 from Yolo import *
 
 COLOR = (255,0,255)
@@ -11,7 +11,7 @@ def parser():
     parser = argparse.ArgumentParser(description="Tracking with Detectron2")
     parser.add_argument("-input",type = str,default="./input/3_persp.avi",
                         help = "Input video path")
-    parser.add_argument("-output",type = str,default="./output/3_persp_demo1.avi",
+    parser.add_argument("-output",type = str,default="./output/3_persp_demo2.avi",
                         help = "Output video path. Not save if empty.")
     parser.add_argument("-weights",default = "./model_final1.pth",
                         help = "Detector model weights")
@@ -27,7 +27,7 @@ def parser():
                         help = "Path to classes file")
     parser.add_argument("-numc",type=int,default="3",
                         help = "Number of classes")
-    parser.add_argument("-detector", type = int, default=1,
+    parser.add_argument("-detector", type = int, default=2,
                         help="Detecor type. 1 = yolo, 2 = Detectron2")
     return parser.parse_args()
 
