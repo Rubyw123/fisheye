@@ -20,8 +20,8 @@ def parser():
     parser.add_argument("-x", type = int, default = 10)
     parser.add_argument("-y", type = int, default = -40)
     parser.add_argument("-z", type = int, default = 3)
-    parser.add_argument("-input",type = str,default = "./3.avi")
-    parser.add_argument("-output",type = str,default= "./3_persp.avi")
+    parser.add_argument("-input",type = str,default = "./6.avi")
+    parser.add_argument("-output",type = str,default= "./6_persp.avi")
     return parser.parse_args()
 
 def str2int(video_path):
