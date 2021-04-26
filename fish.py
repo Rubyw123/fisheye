@@ -64,7 +64,7 @@ class PARAMS(Structure):
                 ("missingcolour",BITMAP4),
                 ("debug",c_int)]
 
-def create_params(pwidth,pheight,ffov,fradius,fcenterx,fcentery, fheight,fwidth):
+def create_params(pwidth,pheight,ffov,fradius,fcenterx,fcentery,pfov, fheight,fwidth):
     global JPG
     params = PARAMS()
     params.perspwidth = pwidth
@@ -77,7 +77,7 @@ def create_params(pwidth,pheight,ffov,fradius,fcenterx,fcentery, fheight,fwidth)
     params.fishwidth = fwidth
     params.fishheight = fheight
     params.debug = 0
-    params.perspfov = 100
+    params.perspfov = pfov
     params.antialias = 2
     params.a1 =1
     params.a2 =0

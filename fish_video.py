@@ -6,7 +6,7 @@ import numpy
 
 def parser():
     parser = argparse.ArgumentParser(description = "Fisheye To Perspective Convert")
-    parser.add_argument("-s", type = float,  default = 190.0)
+    parser.add_argument("-s", type = float,  default = 180.0)
     parser.add_argument("-cx", type = int, default = 640)
     parser.add_argument("-cy", type = int, default = 480)
     parser.add_argument("-r", type = int, default = 640)
@@ -15,13 +15,13 @@ def parser():
     parser.add_argument("-remap", action = 'store_false')
     parser.add_argument("-w", type = int, default = 1000)
     parser.add_argument("-h2", type = int, default = 1000)
-    parser.add_argument("-t", type = int, default = 100 )
+    parser.add_argument("-t", type = int, default = 105 )
     parser.add_argument("-d", action = 'store_true')
     parser.add_argument("-x", type = int, default = 10)
     parser.add_argument("-y", type = int, default = -40)
     parser.add_argument("-z", type = int, default = 3)
-    parser.add_argument("-input",type = str,default = "./6.avi")
-    parser.add_argument("-output",type = str,default= "./6_persp.avi")
+    parser.add_argument("-input",type = str,default = "./data/Virginia_Mills/09162020_055956_to_09162020_065956.avi")
+    parser.add_argument("-output",type = str,default= "./output/Virginia_Mills/09162020_055956_to_09162020_065956.avi")
     return parser.parse_args()
 
 def str2int(video_path):
@@ -65,7 +65,7 @@ def video_capture(args):
 
 def fish2persp(args,h,w):
     fname = str.encode('./tmp.jpg')
-    params = create_params(args.w,args.h2,args.s,args.r,args.cx,args.cy,h,w)
+    params = create_params(args.w,args.h2,args.s,args.r,args.cx,args.cy,args.t,h,w)
 
 
     fishimage = BITMAP4()
